@@ -11,6 +11,11 @@ const DIFFICULTY_SIZE: Record<Difficulty, number> = {
   Medium: 19,
   Hard: 27,
 };
+const DIFFICULTY_MULTIPLIER: Record<Difficulty, number> = {
+  Easy: 10,
+  Medium: 50,
+  Hard: 100,
+};
 
 function generateMaze(rows: number, cols: number) {
   if (rows % 2 === 0) rows -= 1;
@@ -120,12 +125,6 @@ export default function MazeGame() {
           : `${fileKey} — Former officer`,
       };
     });
-
-  const advisers = former.filter(
-    (f) =>
-      normalize(f.filename) === "mrmalihum" ||
-      normalize(f.filename) === "msgongora",
-  );
 
   const [visibleGroup, setVisibleGroup] = useState<string>("All");
 
@@ -284,7 +283,7 @@ export default function MazeGame() {
     const nr = r + dr;
     const nc = c + dc;
     if (nr < 0 || nc < 0 || nr >= grid.length || nc >= grid[0].length) return;
-    if (grid[nr][nc] === 0) return; // wall
+    if (grid[nr][nc] === 0) return;
     setPlayer([nr, nc]);
     setMoves((m) => m + 1);
 
@@ -294,10 +293,11 @@ export default function MazeGame() {
       if (timerRef.current) window.clearInterval(timerRef.current);
       timerRef.current = null;
 
-      const score = Math.max(
-        1,
-        Math.round(10000 / ((timeSec + 1) * (moves + 1))),
-      );
+      const baseScore = 10000 / ((timeSec + 1) * (moves + 1));
+      const difficultyBonus = DIFFICULTY_MULTIPLIER[difficulty];
+
+      const score = Math.max(1, Math.round(baseScore * difficultyBonus));
+
       setLastScore(score);
       setFinished(true);
     }
@@ -350,6 +350,7 @@ export default function MazeGame() {
       setLeaderboard(items);
     } catch (err) {
       setLeaderboard([]);
+      console.error(err);
     } finally {
       setLeaderboardLoading(false);
     }
@@ -654,7 +655,39 @@ export default function MazeGame() {
             </div>
           </div>
         )}
-
+        <div className="flex gap-2 justify-center items-center">
+          <div className="grid grid-cols-3 gap-2 w-full max-w-xs">
+            <div />
+            <button
+              onClick={() => movePlayer(-1, 0)}
+              className="px-3 py-2 rounded border"
+            >
+              ↑
+            </button>
+            <div />
+            <button
+              onClick={() => movePlayer(0, -1)}
+              className="px-3 py-2 rounded border"
+            >
+              ←
+            </button>
+            <div />
+            <button
+              onClick={() => movePlayer(0, 1)}
+              className="px-3 py-2 rounded border"
+            >
+              →
+            </button>
+            <div />
+            <button
+              onClick={() => movePlayer(1, 0)}
+              className="px-3 py-2 rounded border"
+            >
+              ↓
+            </button>
+            <div />
+          </div>
+        </div>
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-medium">Leaderboard</h3>
@@ -710,40 +743,6 @@ export default function MazeGame() {
             {leaderboardLoading && (
               <div className="text-xs text-zinc-500 mt-2">Refreshing...</div>
             )}
-          </div>
-        </div>
-
-        <div className="flex gap-2 justify-center items-center">
-          <div className="grid grid-cols-3 gap-2 w-full max-w-xs">
-            <div />
-            <button
-              onClick={() => movePlayer(-1, 0)}
-              className="px-3 py-2 rounded border"
-            >
-              ↑
-            </button>
-            <div />
-            <button
-              onClick={() => movePlayer(0, -1)}
-              className="px-3 py-2 rounded border"
-            >
-              ←
-            </button>
-            <div />
-            <button
-              onClick={() => movePlayer(0, 1)}
-              className="px-3 py-2 rounded border"
-            >
-              →
-            </button>
-            <div />
-            <button
-              onClick={() => movePlayer(1, 0)}
-              className="px-3 py-2 rounded border"
-            >
-              ↓
-            </button>
-            <div />
           </div>
         </div>
       </div>

@@ -3,7 +3,6 @@ interface ScoreType {
   difficulty: "Easy" | "Medium" | "Hard";
   score: number;
   time: number;
-  character: string;
   createdAt: Date;
 }
 

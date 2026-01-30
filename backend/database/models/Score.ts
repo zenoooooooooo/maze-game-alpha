@@ -11,7 +11,7 @@ const ScoreModel = new Schema<ScoreType>(
     },
     score: { type: Number, required: true },
     time: { type: Number, required: true },
-    character: { type: String, required: true}
+   
   },
   { timestamps: true },
 );
