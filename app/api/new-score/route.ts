@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { username, difficulty, score, time } = await req.json();
+    const { username, difficulty, score, time, character } = await req.json();
 
     await connectToDatabase();
 
@@ -21,10 +21,11 @@ export async function POST(req: NextRequest) {
       difficulty,
       score,
       time,
+      character,
     });
 
-    await newScore.save()
-    
+    await newScore.save();
+
     return NextResponse.json(
       { message: "Score added successfully" },
       { status: 201 },
