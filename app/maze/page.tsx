@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-
+import { useRouter } from "next/navigation";
 interface Particle {
   x: number;
   y: number;
@@ -18,6 +18,8 @@ const Maze = () => {
   const requestRef = useRef<number>();
   const [time, setTime] = useState(60);
   const [usedTiles, setUsedTiles] = useState<Set<string>>(new Set());
+
+  const router = useRouter();
 
   const levels = [
     ["s", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -107,7 +109,7 @@ const Maze = () => {
     return () => clearInterval(timer);
   }, [gameStarted, gameover]);
 
-  const handleCellEnter = (r: number, c: number, cell: number) => {
+  const handleCellEnter = async (r: number, c: number, cell: number | String) => {
     const key = `${r}-${c}`;
 
     if (!gameStarted && r === 0 && c === 0) {
@@ -119,9 +121,9 @@ const Maze = () => {
     if (!gameStarted || gameover) return;
 
     if (cell === 1) {
-      setGameover(true);
-      alert("You touched the wall! You lost!");
-      window.location.reload();
+      // setGameover(true);
+      // alert("You touched the wall! You lost!");
+      // router.push("/");
       return;
     }
 
@@ -139,9 +141,24 @@ const Maze = () => {
       return;
     }
 
-    if (cell === 4) {
+    if (cell === "e") {
       setGameover(true);
       alert("You won!");
+
+      const username = localStorage.getItem("mazeUsername");
+
+      console.log(username);
+
+      await fetch("http://localhost:3000/api/new-score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_KEY!, 
+        },
+        body: JSON.stringify({
+          username,
+        }),
+      });
     }
   };
 
@@ -272,7 +289,7 @@ const Maze = () => {
         <img
           src={cursorImage}
           alt="avatar cursor"
-          className="pointer-events-none fixed w-10 h-10 -translate-x-1/2 -translate-y-1/2"
+          className="pointer-events-none rounded-full border-black border-1 fixed w-10 h-10 -translate-x-1/2 -translate-y-1/2"
           style={{ top: mousePos.y, left: mousePos.x }}
         />
       )}

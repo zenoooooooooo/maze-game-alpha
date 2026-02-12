@@ -12,15 +12,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { username, difficulty, score, time } = await req.json();
+    const { username } = await req.json();
 
     await connectToDatabase();
 
     const newScore = new Score({
       username,
-      difficulty,
-      score,
-      time,
     });
 
     await newScore.save();
