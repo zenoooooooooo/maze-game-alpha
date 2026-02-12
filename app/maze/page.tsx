@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 interface Particle {
   x: number;
   y: number;
@@ -99,7 +100,8 @@ const Maze = () => {
         if (prev <= 1) {
           clearInterval(timer);
           setGameover(true);
-          alert("Time's up!");
+          toast.error("Time's Up - Gameover");
+          router.push("/");
           return 0;
         }
         return prev - 1;
@@ -109,7 +111,11 @@ const Maze = () => {
     return () => clearInterval(timer);
   }, [gameStarted, gameover]);
 
-  const handleCellEnter = async (r: number, c: number, cell: number | String) => {
+  const handleCellEnter = async (
+    r: number,
+    c: number,
+    cell: number | String,
+  ) => {
     const key = `${r}-${c}`;
 
     if (!gameStarted && r === 0 && c === 0) {
@@ -121,44 +127,50 @@ const Maze = () => {
     if (!gameStarted || gameover) return;
 
     if (cell === 1) {
-      // setGameover(true);
-      // alert("You touched the wall! You lost!");
-      // router.push("/");
+      setGameover(true);
+      toast.error("You touched the wall - Gameover");
+      router.push("/");
       return;
     }
 
     if (usedTiles.has(key)) return;
 
     if (cell === 2) {
-      setTime((prev) => prev + 10);
+      setTime((prev) => prev + 20);
       setUsedTiles((prev) => new Set(prev).add(key));
+      toast.info("You've reached level 2 - +20 seconds");
       return;
     }
 
     if (cell === 3) {
-      setTime((prev) => prev + 5);
+      setTime((prev) => prev + 15);
       setUsedTiles((prev) => new Set(prev).add(key));
+      toast.info("You've reached level 3 - +15 seconds");
       return;
     }
 
     if (cell === "e") {
       setGameover(true);
-      alert("You won!");
+      toast.success(
+        "Congratulations! You've completed the maze! Go to an officer for a reward!",
+      );
 
       const username = localStorage.getItem("mazeUsername");
 
       console.log(username);
 
-      await fetch("http://localhost:3000/api/new-score", {
+      await fetch("/api/new-score", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_API_KEY!, 
+          "x-api-key": process.env.NEXT_PUBLIC_API_KEY!,
         },
         body: JSON.stringify({
           username,
         }),
       });
+
+      router.push("/");
     }
   };
 
@@ -254,7 +266,7 @@ const Maze = () => {
                   {revealed && cell === 3 && (
                     <span className="text-black">
                       Level 3<br />
-                      +10 Seconds
+                      +15 Seconds
                     </span>
                   )}
 

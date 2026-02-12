@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { availableOfficerFiles, roster } from "./rosterData";
+import { toast } from "sonner";
 
 export default function Start() {
   const [username, setUsername] = useState("");
@@ -70,7 +71,7 @@ export default function Start() {
 
   function startGame() {
     if (!username) {
-      alert("Please enter your username before starting.");
+      toast.error("Please enter your username before starting.");
       return;
     }
 
@@ -203,7 +204,77 @@ export default function Start() {
             Start Game
           </button>
         </div>
+        <div className="mt-8">
+          <Leaderboard />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Leaderboard() {
+  const [scores, setScores] = useState<
+    Array<{ username?: string; createdAt?: string }>
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/leaderboard", {
+        method: "GET",
+        headers: {
+          "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
+        },
+      });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const data = await res.json();
+
+      setScores((data.scores || data.data || []).slice(0, 10));
+    } catch (err: any) {
+      setError(err?.message || "Failed to load leaderboard");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  return (
+    <div className="bg-zinc-800 p-4 rounded-md">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-medium">Leaderboard</h3>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="px-2 py-1 text-sm rounded border">
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {loading && <div className="text-sm text-zinc-400">Loading...</div>}
+      {error && <div className="text-sm text-red-400">{error}</div>}
+
+      {!loading && !error && (
+        <ol className="space-y-2">
+          {scores.length === 0 && (
+            <li className="text-sm text-zinc-400">No scores yet</li>
+          )}
+          {scores.map((s, i) => (
+            <li key={i} className="flex items-center justify-between">
+              <div className="text-sm font-medium">
+                {s.username || "Unknown"}
+              </div>
+              <div className="text-xs text-zinc-400">
+                {new Date(s.createdAt || Date.now()).toLocaleString()}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
